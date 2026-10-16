@@ -1,0 +1,77 @@
+name: Build ImmortalWrt HNR101
+run-name: Build HNR101 @ ${{ github.sha }}
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: 拉取源码 sqliuchang/immortalwrt
+        uses: actions/checkout@v4
+        with:
+          repository: sqliuchang/immortalwrt
+          ref: master
+          fetch-depth: 0
+
+      - name: 安装编译依赖
+        run: |
+          sudo apt update
+          sudo apt install -y build-essential libncurses-dev gawk flex bison openssl libssl-dev dkms libelf-dev libudev-dev libpci-dev libiberty-dev autoconf git python3 python3-pip unzip rsync wget curl
+
+      - name: 配置 feeds
+        run: |
+          ./scripts/feeds update -a
+          ./scripts/feeds install -a
+
+      - name: 添加 iStore + OpenClash 插件源
+        run: |
+          git clone https://github.com/istoreos/istore.git package/istore
+          git clone https://github.com/vernesong/OpenClash.git package/OpenClash
+
+      - name: 生成 .config 配置文件（HNR101）
+        run: |
+          cat > .config <<'EOF'
+            CONFIG_TARGET_ipq807x=y
+            CONFIG_TARGET_ipq807x_generic=y
+            CONFIG_TARGET_MULTI_PROFILE=y
+            CONFIG_TARGET_DEVICE_ipq807x_generic_DEVICE_hnr101=y
+            CONFIG_TARGET_DEVICE_PACKAGES_ipq807x_generic_DEVICE_hnr101=""
+
+            CONFIG_BUSYBOX_CUSTOM=y
+            CONFIG_TARGET_PER_DEVICE_ROOTFS=y
+
+            CONFIG_PACKAGE_istore=y
+            CONFIG_PACKAGE_luci-app-openclash=y
+            CONFIG_PACKAGE_luci-i18n-zh-cn=y
+
+            CONFIG_PACKAGE_curl=y
+            CONFIG_PACKAGE_wget=y
+            CONFIG_PACKAGE_tcpdump=y
+            CONFIG_PACKAGE_ipset=y
+            CONFIG_PACKAGE_iptables-mod-ipsec=y
+            CONFIG_PACKAGE_kmod-ipt-ipset=y
+            CONFIG_PACKAGE_kmod-tun=y
+          EOF
+          make defconfig
+
+      - name: 替换新版 ath11k WLAN.HK 无线固件
+        run: |
+          FW_DIR=package/firmware/ath11k-firmware/files/lib/firmware/IPQ8074/hw2.0/
+          mkdir -p $FW_DIR
+          wget -O $FW_DIR/WLAN.HK.2.9.0.1-02204-QCAHKSWPL_SILICONZ-1.bin https://mirror.ghproxy.com/https://github.com/kvalo/ath11k-firmware/raw/master/IPQ8074/hw2.0/WLAN.HK.2.9.0.1-02204-QCAHKSWPL_SILICONZ-1/WLAN.HK.2.9.0.1-02204-QCAHKSWPL_SILICONZ-1.bin
+
+      - name: 预下载源码包
+        run: |
+          make download -j8
+
+      - name: 开始编译固件
+        run: |
+          make -j$(nproc) V=s
+
+      - name: 上传编译产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: HNR101-ImmortalWrt-${{ github.sha }}
+          path: bin/targets/ipq807x/generic/
