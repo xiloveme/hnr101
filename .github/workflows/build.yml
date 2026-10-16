@@ -32,28 +32,24 @@ jobs:
 
       - name: 生成 .config 配置文件（HNR101）
         run: |
-          cat > .config <<'EOF'
-            CONFIG_TARGET_ipq807x=y
-            CONFIG_TARGET_ipq807x_generic=y
-            CONFIG_TARGET_MULTI_PROFILE=y
-            CONFIG_TARGET_DEVICE_ipq807x_generic_DEVICE_hnr101=y
-            CONFIG_TARGET_DEVICE_PACKAGES_ipq807x_generic_DEVICE_hnr101=""
-
-            CONFIG_BUSYBOX_CUSTOM=y
-            CONFIG_TARGET_PER_DEVICE_ROOTFS=y
-
-            CONFIG_PACKAGE_istore=y
-            CONFIG_PACKAGE_luci-app-openclash=y
-            CONFIG_PACKAGE_luci-i18n-zh-cn=y
-
-            CONFIG_PACKAGE_curl=y
-            CONFIG_PACKAGE_wget=y
-            CONFIG_PACKAGE_tcpdump=y
-            CONFIG_PACKAGE_ipset=y
-            CONFIG_PACKAGE_iptables-mod-ipsec=y
-            CONFIG_PACKAGE_kmod-ipt-ipset=y
-            CONFIG_PACKAGE_kmod-tun=y
-          EOF
+          rm -f .config
+          echo "CONFIG_TARGET_ipq807x=y" >> .config
+          echo "CONFIG_TARGET_ipq807x_generic=y" >> .config
+          echo "CONFIG_TARGET_MULTI_PROFILE=y" >> .config
+          echo "CONFIG_TARGET_DEVICE_ipq807x_generic_DEVICE_hnr101=y" >> .config
+          echo "CONFIG_TARGET_DEVICE_PACKAGES_ipq807x_generic_DEVICE_hnr101=\"\"" >> .config
+          echo "CONFIG_BUSYBOX_CUSTOM=y" >> .config
+          echo "CONFIG_TARGET_PER_DEVICE_ROOTFS=y" >> .config
+          echo "CONFIG_PACKAGE_istore=y" >> .config
+          echo "CONFIG_PACKAGE_luci-app-openclash=y" >> .config
+          echo "CONFIG_PACKAGE_luci-i18n-zh-cn=y" >> .config
+          echo "CONFIG_PACKAGE_curl=y" >> .config
+          echo "CONFIG_PACKAGE_wget=y" >> .config
+          echo "CONFIG_PACKAGE_tcpdump=y" >> .config
+          echo "CONFIG_PACKAGE_ipset=y" >> .config
+          echo "CONFIG_PACKAGE_iptables-mod-ipsec=y" >> .config
+          echo "CONFIG_PACKAGE_kmod-ipt-ipset=y" >> .config
+          echo "CONFIG_PACKAGE_kmod-tun=y" >> .config
           make defconfig
 
       - name: 替换新版 ath11k WLAN.HK 无线固件
