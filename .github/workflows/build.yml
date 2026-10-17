@@ -1,31 +1,31 @@
 name: Build ImmortalWrt HNR101 Pure
-run-name: Pure-HNR101 @ ${{ github.sha }}
+run-name: Pure‑HNR101 @ ${{ github.sha }}
 
 on:
   workflow_dispatch:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu‑20.04
     steps:
       - name: 拉取源码 sqliuchang/immortalwrt
         uses: actions/checkout@v4
         with:
           repository: sqliuchang/immortalwrt
           ref: main
-          fetch-depth: 0
+          fetch‑depth: 0
 
       - name: 安装编译依赖
         run: |
           sudo apt update
-          sudo apt install -y build-essential libncurses-dev gawk flex bison openssl libssl-dev dkms libelf-dev libudev-dev libpci-dev libiberty-dev autoconf git python3 python3-pip unzip rsync wget curl
+          sudo apt install -y build‑essential libncurses‑dev gawk flex bison openssl libssl‑dev dkms libelf‑dev libudev‑dev libpci‑dev libiberty‑dev autoconf git python3 python3‑pip unzip rsync wget curl
 
       - name: 配置 feeds
         run: |
           ./scripts/feeds update -a
           ./scripts/feeds install -a
 
-      - name: 生成 .config 配置文件（纯净HNR101）
+      - name: 生成 .config 配置文件（纯净HNR101，修复wpad编译报错）
         run: |
           rm -f .config
           echo "CONFIG_TARGET_ipq807x=y" >> .config
@@ -35,24 +35,27 @@ jobs:
           echo "CONFIG_TARGET_DEVICE_PACKAGES_ipq807x_generic_DEVICE_hnr101=\"\"" >> .config
           echo "CONFIG_BUSYBOX_CUSTOM=y" >> .config
           echo "CONFIG_TARGET_PER_DEVICE_ROOTFS=y" >> .config
-          echo "CONFIG_PACKAGE_luci-i18n-zh-cn=y" >> .config
+          echo "CONFIG_PACKAGE_luci‑i18n‑zh‑cn=y" >> .config
           echo "CONFIG_PACKAGE_curl=y" >> .config
           echo "CONFIG_PACKAGE_wget=y" >> .config
           echo "CONFIG_PACKAGE_tcpdump=y" >> .config
           echo "CONFIG_PACKAGE_ipset=y" >> .config
-          echo "CONFIG_PACKAGE_kmod-tun=y" >> .config
+          echo "CONFIG_PACKAGE_kmod‑tun=y" >> .config
+          # ========== 关键修复 关闭wpad-full-openssl ==========
+          echo "CONFIG_PACKAGE_wpad-openssl=y" >> .config
+          echo "# CONFIG_PACKAGE_wpad-full-openssl is not set" >> .config
           make defconfig
 
       - name: 预下载源码包
         run: |
-          make download -j8
+          make download -j4
 
-      - name: 开始编译固件
+      - name: 开始编译固件（限制线程，防止OOM）
         run: |
-          make -j$(nproc) V=s
+          make -j2 V=s
 
       - name: 上传编译产物
-        uses: actions/upload-artifact@v4
+        uses: actions/upload‑artifact@v4
         with:
-          name: Pure-HNR101-ImmortalWrt-${{ github.sha }}
+          name: Pure‑HNR101‑ImmortalWrt‑${{ github.sha }}
           path: bin/targets/ipq807x/generic/
