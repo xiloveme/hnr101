@@ -1,5 +1,5 @@
-name: Build ImmortalWrt HNR101
-run-name: Build HNR101 @ ${{ github.sha }}
+name: Build ImmortalWrt HNR101 Pure
+run-name: Pure-HNR101 @ ${{ github.sha }}
 
 on:
   workflow_dispatch:
@@ -25,12 +25,7 @@ jobs:
           ./scripts/feeds update -a
           ./scripts/feeds install -a
 
-      - name: 添加 iStore + OpenClash 插件源
-        run: |
-          git clone https://github.com/istoreos/istore.git package/istore
-          git clone https://github.com/vernesong/OpenClash.git package/OpenClash
-
-      - name: 生成 .config 配置文件（HNR101）
+      - name: 生成 .config 配置文件（纯净HNR101）
         run: |
           rm -f .config
           echo "CONFIG_TARGET_ipq807x=y" >> .config
@@ -40,23 +35,13 @@ jobs:
           echo "CONFIG_TARGET_DEVICE_PACKAGES_ipq807x_generic_DEVICE_hnr101=\"\"" >> .config
           echo "CONFIG_BUSYBOX_CUSTOM=y" >> .config
           echo "CONFIG_TARGET_PER_DEVICE_ROOTFS=y" >> .config
-          echo "CONFIG_PACKAGE_istore=y" >> .config
-          echo "CONFIG_PACKAGE_luci-app-openclash=y" >> .config
           echo "CONFIG_PACKAGE_luci-i18n-zh-cn=y" >> .config
           echo "CONFIG_PACKAGE_curl=y" >> .config
           echo "CONFIG_PACKAGE_wget=y" >> .config
           echo "CONFIG_PACKAGE_tcpdump=y" >> .config
           echo "CONFIG_PACKAGE_ipset=y" >> .config
-          echo "CONFIG_PACKAGE_iptables-mod-ipsec=y" >> .config
-          echo "CONFIG_PACKAGE_kmod-ipt-ipset=y" >> .config
           echo "CONFIG_PACKAGE_kmod-tun=y" >> .config
           make defconfig
-
-      - name: 替换新版 ath11k WLAN.HK 无线固件
-        run: |
-          FW_DIR=package/firmware/ath11k-firmware/files/lib/firmware/IPQ8074/hw2.0/
-          mkdir -p $FW_DIR
-          wget -O $FW_DIR/WLAN.HK.2.9.0.1-02204-QCAHKSWPL_SILICONZ-1.bin https://mirror.ghproxy.com/https://github.com/kvalo/ath11k-firmware/raw/master/IPQ8074/hw2.0/WLAN.HK.2.9.0.1-02204-QCAHKSWPL_SILICONZ-1/WLAN.HK.2.9.0.1-02204-QCAHKSWPL_SILICONZ-1.bin
 
       - name: 预下载源码包
         run: |
@@ -69,5 +54,5 @@ jobs:
       - name: 上传编译产物
         uses: actions/upload-artifact@v4
         with:
-          name: HNR101-ImmortalWrt-${{ github.sha }}
+          name: Pure-HNR101-ImmortalWrt-${{ github.sha }}
           path: bin/targets/ipq807x/generic/
